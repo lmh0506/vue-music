@@ -1,15 +1,103 @@
 <template>
   <div>
-    歌手页面
+    <div class="singer">
+      <list-view :data='singerList'></list-view>
+    </div>
   </div>
 </template>
 
 <script type='text/ecmascript-6'>
-export default {
-}
+  import {getSingerList} from 'api/singer'
+  import Singer from 'assets/js/singer'
+  import ListView from 'base/listview/listview'
+  import {ERR_OK} from 'api/config'
+
+  const HOT_NAME = '热门'
+  const HOT_SINGER_LEN = 10
+
+  export default {
+    data() {
+      return {
+        singerList: []
+      }
+    },
+    components: {
+      ListView
+    },
+    methods: {
+      _getSingerList() {
+        // 获取歌手列表数据
+        getSingerList().then(res => {
+          if (res.code === ERR_OK) {
+            this.singerList = this._normalizeSinger(res.data.list)
+          }
+        })
+      },
+      _normalizeSinger(list) {
+        // 创建一个map对象存储分离后的列表数据
+        let map = {
+          hot: {
+            title: HOT_NAME,
+            items: []
+          }
+        }
+
+        list.forEach((item, index) => {
+          // 遍历歌手列表 取前十条为热门
+          if (index < HOT_SINGER_LEN) {
+            // 如果符合条件添加歌手对象
+            map.hot.items.push(new Singer({
+              id: item.Fsinger_mid,
+              name: item.Fsinger_name
+            }))
+          }
+
+          // 如果key不存在则赋值 一个新对象
+          const key = item.Findex
+          if (!map[key]) {
+            map[key] = {
+              title: key,
+              items: []
+            }
+          }
+
+          // 将每个歌手添加到其名字首字母对应的列表中
+          map[key].items.push(new Singer({
+            id: item.Fsinger_mid,
+            name: item.Fsinger_name
+          }))
+        })
+
+        // 为了得到有序列表，需要处理map
+        let hot = []
+        let ret = []
+        for (let key in map) {
+          let val = map[key]
+          if (val.title.match(/[a-zA-Z]/)) {
+            ret.push(val)
+          } else if (val.title === HOT_NAME) {
+            hot.push(val)
+          }
+        }
+
+        // 按a-z排序
+        ret.sort((a, b) => {
+          return a.title.charCodeAt(0) - b.title.charCodeAt(0)
+        })
+        return hot.concat(ret)
+      }
+    },
+    created() {
+      this._getSingerList()
+    }
+  }
 </script>
 
 <style lang="stylus" scoped>
-
+  .singer
+    position : fixed
+    top : 80px
+    bottom : 0px
+    width : 100%
 </style>
 

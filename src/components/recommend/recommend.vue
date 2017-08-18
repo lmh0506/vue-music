@@ -60,6 +60,7 @@
       this._getDiscList()
     },
     methods: {
+      // 获取轮播图数据
       _getRecommend() {
         getRecommend().then(res => {
           if (res.code === ERR_OK) {
@@ -67,6 +68,7 @@
           }
         })
       },
+      // 获取热门推荐表单数据
       _getDiscList() {
         getDiscList().then(res => {
           if (res.code === ERR_OK) {
