@@ -26,6 +26,7 @@ module.exports = {
       'assets': resolve('src/assets'),
       'api': resolve('src/api'),
       'base': resolve('src/base'),
+      'store': resolve('src/store'),
     }
   },
   module: {
