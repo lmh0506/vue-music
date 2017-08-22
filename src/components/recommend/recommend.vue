@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="recommend">
+    <div class="recommend" ref="recommend">
       <scroll ref="scroll" class="recommend-content" :data='discList'>
         <div>
             <!-- 确保数据获取到后进行渲染 避免轮播图宽度计算错误 -->
@@ -42,8 +42,10 @@
   import Loading from 'base/loading/loading'
   import {getRecommend, getDiscList} from 'api/recommend'
   import {ERR_OK} from 'api/config'
+  import {playlistMixin} from 'assets/js/mixin'
 
   export default {
+    mixins: [playlistMixin],
     data() {
       return {
         recommends: [],
@@ -82,6 +84,11 @@
           this.$refs.scroll.refresh()
           this.checkLoaded = true
         }
+      },
+      handlePlaylist(playlist) {
+        const bottom = playlist.length > 0 ? '60px' : ''
+        this.$refs.recommend.style.bottom = bottom
+        this.$refs.scroll.refresh()
       }
     }
   }
