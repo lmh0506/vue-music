@@ -108,6 +108,9 @@
       scroll(pos) {
         this.scrollY = pos.y
       },
+      refresh() {
+        this.$refs.listview.refresh()
+      },
       _calculateHeight() { // 计算每组的高度
         // 每次计算前先清空原数组
         this.listHeight = []

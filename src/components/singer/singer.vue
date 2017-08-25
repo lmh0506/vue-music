@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="singer" ref="singer">
-      <list-view @select="selectSinger" :data='singerList' ref="list"></list-view>
+      <list-view @select="selectSinger" :data='singerList' ref="listView"></list-view>
       <router-view></router-view>
     </div>
   </div>
@@ -99,7 +99,7 @@
       handlePlaylist(playlist) {
         const bottom = playlist.length > 0 ? '60px' : ''
         this.$refs.singer.style.bottom = bottom
-        this.$refs.list.refresh()
+        this.$refs.listView.refresh()
       },
       ...mapMutations({
         setSinger: 'SET_SINGER'
