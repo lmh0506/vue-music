@@ -1,7 +1,7 @@
 import * as types from './mutation-types'
 import {playMode} from 'assets/js/config'
 import {shuffle} from 'assets/js/util'
-import {saveSearch, deleteSearch, clearSearch} from 'assets/js/cache'
+import {saveSearch, deleteSearch, clearSearch, savePlay} from 'assets/js/cache'
 
 function findIndex(list, song) {
   return list.findIndex(item => {
@@ -79,6 +79,32 @@ export const insertSong = function ({commit, state}, song) {
   commit(types.SET_PLAYING_STATE, true)
 }
 
+export const deleteSong = function ({commit, state}, song) {
+  let playlist = state.playList.slice()
+  let sequenceList = state.sequenceList.slice()
+  let currentIndex = state.currentIndex
+  let pIndex = findIndex(playlist, song)
+  playlist.splice(pIndex, 1)
+  let sIndex = findIndex(sequenceList, song)
+  sequenceList.splice(sIndex, 1)
+
+  if (currentIndex > pIndex || currentIndex === playlist.length) {
+    currentIndex--
+  }
+
+  commit(types.SET_PLAYLIST, playlist)
+  commit(types.SET_SEQUENCE_LIST, sequenceList)
+  commit(types.SET_CURRENT_INDEX, currentIndex)
+  commit(types.SET_PLAYING_STATE, playlist.length > 0)
+}
+
+export const deleteSongList = function ({commit}) {
+  commit(types.SET_PLAYLIST, [])
+  commit(types.SET_SEQUENCE_LIST, [])
+  commit(types.SET_CURRENT_INDEX, -1)
+  commit(types.SET_PLAYING_STATE, false)
+}
+
 export const saveSearchHistory = function({commit}, query) {
   commit(types.SET_SEARCH_HISTORY, saveSearch(query))
 }
@@ -89,4 +115,8 @@ export const deleteSearchHistory = function({commit}, query) {
 
 export const clearSearchHistory = function({commit}) {
   commit(types.SET_SEARCH_HISTORY, clearSearch())
+}
+
+export const savePlayHistory = function({commit}, song) {
+  commit(types.SET_PLAY_HISTORY, savePlay(song))
 }

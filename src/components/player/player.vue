@@ -87,11 +87,12 @@
             <i :class="minIcon" class="icon-mini"></i>
           </progress-circle>
         </div>
-        <div class="control">
+        <div class="control" @click.stop="showPlaylist">
           <i class="icon-playlist"></i>
         </div>
     </div>
     </transition>
+    <playlist ref="playlist"></playlist>
     <audio :src="currentSong.url" 
             ref="audio"
             @canplay="ready"
@@ -102,19 +103,21 @@
 </template>
 
 <script type='text/ecmascript-6'>
-  import {mapState, mapGetters, mapMutations} from 'vuex'
+  import {mapState, mapMutations, mapActions} from 'vuex'
   import animations from 'create-keyframe-animation'
   import {prefixStyle} from 'assets/js/dom'
-  import {playMode} from 'assets/js/config'
-  import {shuffle} from 'assets/js/util'
   import ProgressBar from 'base/progress-bar/progress-bar'
   import ProgressCircle from 'base/progress-circle/progress-circle'
   import Lyric from 'lyric-parser'
   import Scroll from 'base/scroll/scroll'
+  import Playlist from 'components/playlist/playlist'
+  import {playMode} from 'assets/js/config'
+  import {playerMixin} from 'assets/js/mixin'
 
   const transform = prefixStyle('transform')
 
   export default {
+    mixins: [playerMixin],
     data() {
       return {
         songReady: false,
@@ -132,9 +135,6 @@
       minIcon() {
         return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
       },
-      modeIcon() {
-        return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
-      },
       cdRotate() {
         return this.playing ? 'play' : 'play pause'
       },
@@ -146,26 +146,20 @@
       },
       ...mapState([
         'fullScreen',
-        'playList',
         'playing',
-        'currentIndex',
-        'mode',
-        'sequenceList'
-      ]),
-      ...mapGetters([
-        'currentSong'
+        'currentIndex'
       ])
     },
     methods: {
       ...mapMutations({
-        setFullScreen: 'SET_FULL_SCREEN',
-        setPlayngState: 'SET_PLAYING_STATE',
-        setCurrentIndex: 'SET_CURRENT_INDEX',
-        setPlayMode: 'SET_PLAY_MODE',
-        setPlayList: 'SET_PLAYLIST'
+        setFullScreen: 'SET_FULL_SCREEN'
       }),
+      ...mapActions([
+        'savePlayHistory'
+      ]),
       ready() { // 播放器已准备好
         this.songReady = true
+        this.savePlayHistory(this.currentSong)
       },
       error() { // 播放器出错
         this.songReady = true
@@ -213,7 +207,7 @@
             this.currentLyric.seek(this.$refs.audio.currentTime * 1000)
           }
         }
-        this.setPlayngState(!this.playing)
+        this.setPlayingState(!this.playing)
       },
       changeSong(state) { // 切歌
         if (!this.songReady) {
@@ -249,26 +243,6 @@
         if (this.currentLyric) {
           this.currentLyric.seek(0)
         }
-      },
-      changeMode() { // 改变播放模式
-        const mode = (this.mode + 1) % 3
-        this.setPlayMode(mode)
-        let list = []
-
-        if (mode === playMode.random) {
-          list = shuffle(this.sequenceList)
-        } else {
-          list = this.sequenceList
-        }
-
-        this.resetCurrentIndex(list)
-        this.setPlayList(list)
-      },
-      resetCurrentIndex(list) {
-        let index = list.findIndex(item => {
-          return item.id === this.currentSong.id
-        })
-        this.setCurrentIndex(index)
       },
       _getPosAndScale() { // 计算移动到的位置和缩放比例
         const targetWidth = 40 // 最后的宽度
@@ -403,10 +377,17 @@
         this.$refs.lyricList.$el.style['transitionDuration'] = `${time}ms`
         this.$refs.middleL.style.opacity = opacity
         this.$refs.middleL.style['transitionDuration'] = `${time}ms`
+      },
+      showPlaylist() {
+        this.$refs.playlist.show()
       }
     },
     watch: {
       currentSong(newSong, oldSong) {
+        if (!newSong.id) {
+          return
+        }
+
         if (newSong.id === oldSong.id) {
           return
         }
@@ -431,7 +412,8 @@
     components: {
       ProgressBar,
       ProgressCircle,
-      Scroll
+      Scroll,
+      Playlist
     }
   }
 </script>
