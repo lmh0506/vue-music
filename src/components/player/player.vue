@@ -95,7 +95,7 @@
     <playlist ref="playlist"></playlist>
     <audio :src="currentSong.url" 
             ref="audio"
-            @canplay="ready"
+            @play="ready"
             @error="error"
             @timeupdate="updateTime"
             @ended="end"></audio>
@@ -215,6 +215,7 @@
         }
         if (this.playList.length === 1) {
           this.loop()
+          return
         } else {
           let index = state === 'next' ? this.nextIndex() : this.prevIndex()
           this.setCurrentIndex(index)
@@ -243,6 +244,9 @@
         if (this.currentLyric) {
           this.currentLyric.seek(0)
         }
+        if (!this.playing) {
+          this.togglePlaying()
+        }
       },
       _getPosAndScale() { // 计算移动到的位置和缩放比例
         const targetWidth = 40 // 最后的宽度
@@ -261,6 +265,9 @@
       },
       getLyric() { // 获取当前歌曲的歌词
         this.currentSong.getLyric().then(lyric => {
+          if (this.currentSong.lyric !== lyric) {
+            return
+          }
           this.currentLyric = new Lyric(lyric, this.handleLyric)
           if (this.playing) {
             this.currentLyric.play()
@@ -394,7 +401,8 @@
         if (this.currentLyric) {
           this.currentLyric.stop()
         }
-        setTimeout(() => {
+        clearTimeout(this.timer)
+        this.timer = setTimeout(() => {
           this.$refs.audio.play()
           this.getLyric()
         }, 1000)
