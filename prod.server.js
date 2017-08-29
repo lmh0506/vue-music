@@ -1,5 +1,6 @@
 const express = require('express')
 const config = require('./config/index')
+var history = require('connect-history-api-fallback');
 
 var app = express()
 
@@ -46,6 +47,8 @@ apiRoutes.get('/lyric', function (req, res) {
 })
 
 app.use('/api', apiRoutes)
+
+app.use(history())
 
 app.use(express.static('./dist'))
 
